@@ -5,13 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Build Your Agent</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    .step { display: none; margin-top: 1rem; }
+    .step.active { display: block; }
+    .wizard-nav { margin-top: 2rem; }
+    .wizard-nav button { margin: 0 0.5rem; }
+    select, input[type="checkbox"] + label { margin: 0.5rem 0; display: block; }
+  </style>
 </head>
 <body>
   <header>
     <h1>Build Your Agent</h1>
     <nav>
       <a href="index.html">Main</a>
-      <a href="build.html">Build your Agent</a>
+      <a href="build.html" class="active">Build your Agent</a>
       <a href="strategies.html">Strategies</a>
       <a href="pricing.html">Pricing</a>
       <a href="faq.html">FAQ</a>
@@ -20,14 +27,91 @@
 
   <main>
     <section class="content">
-      <h2>Build your AI Stock Agent</h2>
-      <p>Choose up to 3 stocks (in free plan) or unlimited in premium plans. Customize your agent's risk preferences and trading logic. Start receiving insights instantly.</p>
-      <button>Start Configuration</button>
+      <h2>Agent Creation Wizard</h2>
+
+      <!-- Step 1: Strategy Selection -->
+      <div id="step1" class="step active">
+        <h3>Step 1: Choose a Strategy</h3>
+        <select id="strategySelect">
+          <option value="">-- Select an algorithm --</option>
+          <option value="momentum">Momentum AI v1</option>
+          <option value="meanReversion">Mean Reversion Pro</option>
+          <option value="cryptoVol">Crypto Volatility Hunter</option>
+        </select>
+      </div>
+
+      <!-- Step 2: Stock Selection -->
+      <div id="step2" class="step">
+        <h3>Step 2: Choose Stocks</h3>
+        <p>Select up to 3 stocks:</p>
+        <input type="checkbox" id="stockAAPL" value="AAPL">
+        <label for="stockAAPL">Apple (AAPL)</label>
+        <input type="checkbox" id="stockGOOGL" value="GOOGL">
+        <label for="stockGOOGL">Alphabet (GOOGL)</label>
+        <input type="checkbox" id="stockMSFT" value="MSFT">
+        <label for="stockMSFT">Microsoft (MSFT)</label>
+        <input type="checkbox" id="stockTSLA" value="TSLA">
+        <label for="stockTSLA">Tesla (TSLA)</label>
+      </div>
+
+      <!-- Step 3: Deploy Agent -->
+      <div id="step3" class="step">
+        <h3>Step 3: Review & Deploy</h3>
+        <p><strong>Selected Strategy:</strong> <span id="chosenStrategy">None</span></p>
+        <p><strong>Chosen Stocks:</strong> <span id="chosenStocks">None</span></p>
+        <button id="deployBtn">Deploy Agent</button>
+      </div>
+
+      <!-- Wizard Navigation -->
+      <div class="wizard-nav">
+        <button id="prevBtn" onclick="prevStep()" disabled>Back</button>
+        <button id="nextBtn" onclick="nextStep()">Next</button>
+      </div>
     </section>
   </main>
 
   <footer>
     <p>&copy; 2025 StockAgents.io | All Rights Reserved.</p>
   </footer>
+
+  <script>
+    let currentStep = 1;
+    const totalSteps = 3;
+
+    function showStep(step) {
+      for (let i = 1; i <= totalSteps; i++) {
+        document.getElementById('step' + i).classList.remove('active');
+      }
+      document.getElementById('step' + step).classList.add('active');
+      document.getElementById('prevBtn').disabled = step === 1;
+      document.getElementById('nextBtn').innerText = step === totalSteps ? 'Finish' : 'Next';
+    }
+
+    function nextStep() {
+      // Save selections on finish
+      if (currentStep === totalSteps) {
+        const strat = document.getElementById('strategySelect').value;
+        const checked = Array.from(document.querySelectorAll('#step2 input[type="checkbox"]:checked')).map(cb => cb.value);
+        document.getElementById('chosenStrategy').innerText = strat || 'None';
+        document.getElementById('chosenStocks').innerText = checked.join(', ') || 'None';
+        return;
+      }
+      currentStep = Math.min(currentStep + 1, totalSteps);
+      showStep(currentStep);
+    }
+
+    function prevStep() {
+      currentStep = Math.max(currentStep - 1, 1);
+      showStep(currentStep);
+    }
+
+    // Deploy action
+    document.getElementById('deployBtn').addEventListener('click', () => {
+      alert('Your AI Agent has been deployed!');
+    });
+
+    // Initialize
+    showStep(currentStep);
+  </script>
 </body>
 </html>
