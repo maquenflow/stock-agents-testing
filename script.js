@@ -1,3 +1,2 @@
-function mostrarAlerta() {
-    alert("Welcome. Soon, you’ll unleash your own AI-powered Stock Agents right here.");
-}
+// Placeholder for interactivity if needed in future
+console.log('StockAgents.io MVP Loaded');

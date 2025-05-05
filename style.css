@@ -1,69 +1,69 @@
 * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: 'Segoe UI', sans-serif;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', sans-serif;
 }
 
 body {
-    background-color: #f5f7fa;
-    color: #222;
-    line-height: 1.6;
+  background-color: #f5f7fa;
+  color: #222;
+  line-height: 1.6;
 }
 
 header {
-    background-color: #1a1a1a;
-    color: #fff;
-    padding: 1rem;
-    text-align: center;
+  background-color: #1a1a1a;
+  color: #fff;
+  padding: 1rem;
+  text-align: center;
 }
 
 nav a {
-    color: #ccc;
-    margin: 0 15px;
-    text-decoration: none;
-    font-weight: 500;
+  color: #ccc;
+  margin: 0 15px;
+  text-decoration: none;
+  font-weight: 500;
 }
 
 nav a:hover {
-    color: #fff;
+  color: #fff;
 }
 
 main {
-    padding: 2rem;
-    text-align: center;
+  padding: 2rem;
+  text-align: center;
 }
 
-.hero h2 {
-    margin-bottom: 1rem;
-    font-size: 2rem;
+.hero h2, .content h2 {
+  margin-bottom: 1rem;
+  font-size: 2rem;
 }
 
-.hero p {
-    margin-bottom: 1.5rem;
-    color: #555;
+.hero p, .content p {
+  margin-bottom: 1.5rem;
+  color: #555;
 }
 
 button {
-    background-color: #0057d9;
-    color: white;
-    border: none;
-    padding: 0.8rem 1.5rem;
-    border-radius: 5px;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
+  background-color: #0057d9;
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
 button:hover {
-    background-color: #003ea6;
+  background-color: #003ea6;
 }
 
 footer {
-    margin-top: 3rem;
-    padding: 1rem;
-    background-color: #eee;
-    text-align: center;
-    font-size: 0.9rem;
-    color: #777;
+  margin-top: 3rem;
+  padding: 1rem;
+  background-color: #eee;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #777;
 }
