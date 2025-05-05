@@ -5,14 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Strategies</title>
   <link rel="stylesheet" href="style.css" />
-  <script src="script.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     .section { margin: 2rem 0; text-align: left; }
     .editor, .backtest, .publish { display: none; border: 1px solid #ccc; padding: 1rem; border-radius: 5px; background: #fafafa; }
-    .editor.active, .backtest.active, .publish.active { display: block; }
+    .active { display: block; }
     .code-examples { background: #272822; color: #f8f8f2; padding: 1rem; border-radius: 5px; font-family: monospace; overflow-x: auto; }
-    .chart-container { width: 100%; height: 300px; margin: 1rem 0; background: #eaeaea; display: flex; align-items: center; justify-content: center; color: #777; }
+    .chart-container, canvas { width: 100%; height: 300px; margin: 1rem 0; }
     label, select, input, textarea, button { display: block; width: 100%; margin: 0.5rem 0; }
+    /* Modal */
+    .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); }
+    .modal-content { background:#fff; margin:5% auto; padding:20px; width:80%; max-width:600px; position:relative; border-radius:5px; }
+    .close { position:absolute; top:10px; right:15px; font-size:24px; cursor:pointer; }
+    ul#strategyList, ul#tickerSuggestions { max-height:150px; overflow-y:auto; list-style:none; padding:0; border:1px solid #ccc; border-radius:5px; }
+    ul#strategyList li, ul#tickerSuggestions li { padding:0.5rem; cursor:pointer; border-bottom:1px solid #eee; }
+    ul li:hover { background:#f0f0f0; }
+    #strategyDetail { margin-top:1rem; }
   </style>
 </head>
 <body>
@@ -28,40 +36,57 @@
   </header>
 
   <main>
-    <!-- Intro & Model Creation -->
+    <!-- Search Strategies -->
+    <section class="section">
+      <button id="searchStrategiesBtn">Buscar Estrategias</button>
+      <div id="searchModal" class="modal">
+        <div class="modal-content">
+          <span id="closeModal" class="close">&times;</span>
+          <h3>Buscar Estrategias</h3>
+          <input type="text" id="strategySearch" placeholder="Search by name..." />
+          <select id="filterType">
+            <option value="all">All Types</option>
+            <option value="Equity">Equity</option>
+            <option value="Crypto">Crypto</option>
+            <option value="Forex">Forex</option>
+          </select>
+          <select id="filterTech">
+            <option value="all">All Techniques</option>
+            <option value="SMA">SMA</option>
+            <option value="EMA">EMA</option>
+            <option value="RL">RL</option>
+          </select>
+          <ul id="strategyList"></ul>
+          <div id="strategyDetail"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Create Model -->
     <section class="section">
       <h2>Create a New Strategy</h2>
       <p>Follow these steps to build, test and publish your own trading algorithm.</p>
       <button id="createModelBtn">Start Model Editor</button>
     </section>
 
-    <!-- Code Editor / Notebook -->
+    <!-- Editor Section -->
     <section id="editorSection" class="editor">
       <h3>Model Editor (Python Notebook)</h3>
-      <!-- Placeholder for embedded notebook -->
       <div id="notebookContainer" style="border:1px solid #ddd; height:400px;">
         <p style="text-align:center; padding-top:180px; color:#777;">[Embedded Jupyter Notebook here]</p>
       </div>
-      <!-- Example Code Snippets -->
       <h4>Example: Simple SMA Strategy for AAPL</h4>
       <pre class="code-examples">
 import yfinance as yf
 import pandas as pd
 
-# Fetch data
- data = yf.download("AAPL", period="2y")
-
-# Compute SMAs
+data = yf.download("AAPL", period="2y")
  data['SMA20'] = data['Close'].rolling(window=20).mean()
  data['SMA50'] = data['Close'].rolling(window=50).mean()
-
-# Generate signals
  data['Signal'] = 0
- data.loc[data['SMA20'] &gt; data['SMA50'], 'Signal'] = 1  # Buy
- data.loc[data['SMA20'] &lt; data['SMA50'], 'Signal'] = -1 # Sell
-
-# Show head
- print(data[['Close','SMA20','SMA50','Signal']].tail())
+ data.loc[data['SMA20'] > data['SMA50'], 'Signal'] = 1
+ data.loc[data['SMA20'] < data['SMA50'], 'Signal'] = -1
+ print(data.tail())
       </pre>
       <button id="proceedBacktestBtn">Proceed to Backtesting</button>
     </section>
@@ -69,25 +94,15 @@ import pandas as pd
     <!-- Backtesting Section -->
     <section id="backtestSection" class="backtest">
       <h3>Backtest Your Strategy</h3>
-      <label for="stockSelect">Select Stock:</label>
-      <select id="stockSelect">
-        <option value="AAPL">Apple (AAPL)</option>
-        <option value="GOOGL">Alphabet (GOOGL)</option>
-        <option value="MSFT">Microsoft (MSFT)</option>
-        <option value="TSLA">Tesla (TSLA)</option>
-      </select>
-
+      <label for="tickerSearch">Search Ticker:</label>
+      <input type="text" id="tickerSearch" placeholder="e.g. Apple" />
+      <ul id="tickerSuggestions"></ul>
       <label for="startDate">Start Date (min 1 year ago):</label>
-      <input type="date" id="startDate">
+      <input type="date" id="startDate" />
       <label for="endDate">End Date:</label>
-      <input type="date" id="endDate" value="2025-05-05">
-
+      <input type="date" id="endDate" value="2025-05-05" />
       <button id="runBacktestBtn">Run Backtest</button>
-
-      <div class="chart-container" id="performanceChart">
-        Performance chart will appear here
-      </div>
-
+      <canvas id="tickerChart"></canvas>
       <button id="saveAlgoBtn">Save Algorithm</button>
     </section>
 
@@ -95,35 +110,28 @@ import pandas as pd
     <section id="publishSection" class="publish">
       <h3>Publish Your Strategy</h3>
       <label for="algoName">Name:</label>
-      <input type="text" id="algoName" placeholder="Strategy name">
-
+      <input type="text" id="algoName" placeholder="Strategy name" />
       <label for="algoDesc">Description:</label>
       <textarea id="algoDesc" rows="3" placeholder="Describe your strategy..."></textarea>
-
       <label for="algoType">Type:</label>
       <select id="algoType">
         <option value="equities">Equities</option>
         <option value="crypto">Crypto</option>
         <option value="forex">Forex</option>
       </select>
-
       <label for="algoTech">Technique:</label>
-      <input type="text" id="algoTech" placeholder="e.g. SMA, EMA, RL">
-
+      <input type="text" id="algoTech" placeholder="e.g. SMA, EMA, RL" />
       <label>Visibility:</label>
-      <input type="radio" name="visibility" value="public" id="visPublic"><label for="visPublic">Public</label>
-      <input type="radio" name="visibility" value="private" id="visPrivate"><label for="visPrivate">Private</label>
-
+      <input type="radio" name="visibility" value="public" id="visPublic" /><label for="visPublic">Public</label>
+      <input type="radio" name="visibility" value="private" id="visPrivate" /><label for="visPrivate">Private</label>
       <label for="pricingPlan">Pricing Plan:</label>
       <select id="pricingPlan">
         <option value="free">Free</option>
         <option value="subscription">Subscription</option>
         <option value="oneTime">One-Time Payment</option>
       </select>
-
       <button id="publishBtn">Publish Strategy</button>
     </section>
-
   </main>
 
   <footer>
@@ -131,32 +139,86 @@ import pandas as pd
   </footer>
 
   <script>
+    // Strategy Search Modal
+    const modal = document.getElementById('searchModal');
+    const openBtn = document.getElementById('searchStrategiesBtn');
+    const closeBtn = document.getElementById('closeModal');
+    const strategyListEl = document.getElementById('strategyList');
+    const detailEl = document.getElementById('strategyDetail');
+    let strategies = [];
+    // Generate 50 dummy strategies
+    for(let i=1;i<=50;i++) strategies.push({
+      name: `Strategy ${i}`,
+      type: ['Equity','Crypto','Forex'][i%3],
+      technique: ['SMA','EMA','RL'][i%3],
+      description: `Detailed description for Strategy ${i}.`});
+    function renderList() {
+      const search = document.getElementById('strategySearch').value.toLowerCase();
+      const type = document.getElementById('filterType').value;
+      const tech = document.getElementById('filterTech').value;
+      strategyListEl.innerHTML='';
+      strategies.filter(s=>
+        s.name.toLowerCase().includes(search) &&
+        (type==='all'||s.type===type) &&
+        (tech==='all'||s.technique===tech)
+      ).forEach(s=>{
+        const li=document.createElement('li'); li.textContent=`${s.name} (${s.type}/${s.technique})`;
+        li.onclick=()=>{ detailEl.innerHTML=`<h4>${s.name}</h4><p>Type: ${s.type}</p><p>Technique: ${s.technique}</p><p>${s.description}</p>`; };
+        strategyListEl.appendChild(li);
+      });
+    }
+    openBtn.onclick=()=>{ modal.style.display='block'; renderList(); };
+    closeBtn.onclick=()=> modal.style.display='none';
+    ['strategySearch','filterType','filterTech'].forEach(id=>
+      document.getElementById(id).addEventListener('input', renderList)
+    );
+
+    // Wizard navigation from previous code
     const createBtn = document.getElementById('createModelBtn');
     const editorSec = document.getElementById('editorSection');
     const backtestSec = document.getElementById('backtestSection');
     const publishSec = document.getElementById('publishSection');
-    const proceedBtn = document.getElementById('proceedBacktestBtn');
-
-    createBtn.addEventListener('click', () => {
-      editorSec.classList.add('active');
-      window.scrollTo(0, editorSec.offsetTop);
+    document.getElementById('proceedBacktestBtn').addEventListener('click',()=>{
+      editorSec.classList.remove('active'); backtestSec.classList.add('active');
     });
-
-    proceedBtn.addEventListener('click', () => {
-      editorSec.classList.remove('active');
-      backtestSec.classList.add('active');
-      window.scrollTo(0, backtestSec.offsetTop);
+    document.getElementById('saveAlgoBtn').addEventListener('click',()=>{
+      backtestSec.classList.remove('active'); publishSec.classList.add('active');
     });
+    document.getElementById('publishBtn').addEventListener('click',()=> alert('Your strategy has been published!'));
 
-    document.getElementById('saveAlgoBtn').addEventListener('click', () => {
-      backtestSec.classList.remove('active');
-      publishSec.classList.add('active');
-      window.scrollTo(0, publishSec.offsetTop);
+    // Ticker search & chart
+    const tickerInput = document.getElementById('tickerSearch');
+    const suggestionsEl = document.getElementById('tickerSuggestions');
+    let chart;
+    let timeout;
+    tickerInput.addEventListener('input', ()=>{
+      clearTimeout(timeout);
+      timeout = setTimeout(async ()=>{
+        const q = tickerInput.value;
+        if(q.length<2) return;
+        const res = await fetch(`https://query1.finance.yahoo.com/v1/finance/search?q=${q}`);
+        const data = await res.json();
+        suggestionsEl.innerHTML='';
+        data.quotes.slice(0,5).forEach(item=>{
+          const li=document.createElement('li'); li.textContent=`${item.symbol} - ${item.shortname}`;
+          li.onclick=()=> loadChart(item.symbol);
+          suggestionsEl.appendChild(li);
+        });
+      },300);
     });
-
-    document.getElementById('publishBtn').addEventListener('click', () => {
-      alert('Your strategy has been published!');
-    });
+    async function loadChart(sym) {
+      const end = new Date().toISOString().split('T')[0];
+      const startDate = new Date(); startDate.setFullYear(startDate.getFullYear()-1);
+      const start = startDate.toISOString().split('T')[0];
+      const url = `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?range=1y&interval=1d`;
+      const res = await fetch(url); const json = await res.json();
+      const res0 = json.chart.result[0];
+      const timestamps = res0.timestamp.map(t=>new Date(t*1000).toLocaleDateString());
+      const prices = res0.indicators.quote[0].close;
+      if(chart) chart.destroy();
+      const ctx = document.getElementById('tickerChart').getContext('2d');
+      chart = new Chart(ctx, { type:'line', data:{ labels:timestamps, datasets:[{ label:sym, data:prices, fill:false }] }, options:{ responsive:true } });
+    }
   </script>
 </body>
 </html>
