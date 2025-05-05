@@ -5,6 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Strategies</title>
   <link rel="stylesheet" href="style.css" />
+  <script src="script.js" defer></script>
+  <style>
+    .section { margin: 2rem 0; text-align: left; }
+    .editor, .backtest, .publish { display: none; border: 1px solid #ccc; padding: 1rem; border-radius: 5px; background: #fafafa; }
+    .editor.active, .backtest.active, .publish.active { display: block; }
+    .code-examples { background: #272822; color: #f8f8f2; padding: 1rem; border-radius: 5px; font-family: monospace; overflow-x: auto; }
+    .chart-container { width: 100%; height: 300px; margin: 1rem 0; background: #eaeaea; display: flex; align-items: center; justify-content: center; color: #777; }
+    label, select, input, textarea, button { display: block; width: 100%; margin: 0.5rem 0; }
+  </style>
 </head>
 <body>
   <header>
@@ -12,26 +21,142 @@
     <nav>
       <a href="index.html">Main</a>
       <a href="build.html">Build your Agent</a>
-      <a href="strategies.html">Strategies</a>
+      <a href="strategies.html" class="active">Strategies</a>
       <a href="pricing.html">Pricing</a>
       <a href="faq.html">FAQ</a>
     </nav>
   </header>
 
   <main>
-    <section class="content">
-      <h2>Available Trading Strategies</h2>
-      <input type="text" placeholder="Filter strategies..." />
-      <ul>
-        <li><strong>Momentum AI v1</strong> - Detects short-term trends based on EMA and volume.</li>
-        <li><strong>Mean Reversion Pro</strong> - Ideal for sideways markets. Based on Bollinger Bands and RSI.</li>
-        <li><strong>Crypto Volatility Hunter</strong> - Optimized for high-frequency crypto signals.</li>
-      </ul>
+    <!-- Intro & Model Creation -->
+    <section class="section">
+      <h2>Create a New Strategy</h2>
+      <p>Follow these steps to build, test and publish your own trading algorithm.</p>
+      <button id="createModelBtn">Start Model Editor</button>
     </section>
+
+    <!-- Code Editor / Notebook -->
+    <section id="editorSection" class="editor">
+      <h3>Model Editor (Python Notebook)</h3>
+      <!-- Placeholder for embedded notebook -->
+      <div id="notebookContainer" style="border:1px solid #ddd; height:400px;">
+        <p style="text-align:center; padding-top:180px; color:#777;">[Embedded Jupyter Notebook here]</p>
+      </div>
+      <!-- Example Code Snippets -->
+      <h4>Example: Simple SMA Strategy for AAPL</h4>
+      <pre class="code-examples">
+import yfinance as yf
+import pandas as pd
+
+# Fetch data
+ data = yf.download("AAPL", period="2y")
+
+# Compute SMAs
+ data['SMA20'] = data['Close'].rolling(window=20).mean()
+ data['SMA50'] = data['Close'].rolling(window=50).mean()
+
+# Generate signals
+ data['Signal'] = 0
+ data.loc[data['SMA20'] &gt; data['SMA50'], 'Signal'] = 1  # Buy
+ data.loc[data['SMA20'] &lt; data['SMA50'], 'Signal'] = -1 # Sell
+
+# Show head
+ print(data[['Close','SMA20','SMA50','Signal']].tail())
+      </pre>
+      <button id="proceedBacktestBtn">Proceed to Backtesting</button>
+    </section>
+
+    <!-- Backtesting Section -->
+    <section id="backtestSection" class="backtest">
+      <h3>Backtest Your Strategy</h3>
+      <label for="stockSelect">Select Stock:</label>
+      <select id="stockSelect">
+        <option value="AAPL">Apple (AAPL)</option>
+        <option value="GOOGL">Alphabet (GOOGL)</option>
+        <option value="MSFT">Microsoft (MSFT)</option>
+        <option value="TSLA">Tesla (TSLA)</option>
+      </select>
+
+      <label for="startDate">Start Date (min 1 year ago):</label>
+      <input type="date" id="startDate">
+      <label for="endDate">End Date:</label>
+      <input type="date" id="endDate" value="2025-05-05">
+
+      <button id="runBacktestBtn">Run Backtest</button>
+
+      <div class="chart-container" id="performanceChart">
+        Performance chart will appear here
+      </div>
+
+      <button id="saveAlgoBtn">Save Algorithm</button>
+    </section>
+
+    <!-- Publish Section -->
+    <section id="publishSection" class="publish">
+      <h3>Publish Your Strategy</h3>
+      <label for="algoName">Name:</label>
+      <input type="text" id="algoName" placeholder="Strategy name">
+
+      <label for="algoDesc">Description:</label>
+      <textarea id="algoDesc" rows="3" placeholder="Describe your strategy..."></textarea>
+
+      <label for="algoType">Type:</label>
+      <select id="algoType">
+        <option value="equities">Equities</option>
+        <option value="crypto">Crypto</option>
+        <option value="forex">Forex</option>
+      </select>
+
+      <label for="algoTech">Technique:</label>
+      <input type="text" id="algoTech" placeholder="e.g. SMA, EMA, RL">
+
+      <label>Visibility:</label>
+      <input type="radio" name="visibility" value="public" id="visPublic"><label for="visPublic">Public</label>
+      <input type="radio" name="visibility" value="private" id="visPrivate"><label for="visPrivate">Private</label>
+
+      <label for="pricingPlan">Pricing Plan:</label>
+      <select id="pricingPlan">
+        <option value="free">Free</option>
+        <option value="subscription">Subscription</option>
+        <option value="oneTime">One-Time Payment</option>
+      </select>
+
+      <button id="publishBtn">Publish Strategy</button>
+    </section>
+
   </main>
 
   <footer>
     <p>&copy; 2025 StockAgents.io | All Rights Reserved.</p>
   </footer>
+
+  <script>
+    const createBtn = document.getElementById('createModelBtn');
+    const editorSec = document.getElementById('editorSection');
+    const backtestSec = document.getElementById('backtestSection');
+    const publishSec = document.getElementById('publishSection');
+    const proceedBtn = document.getElementById('proceedBacktestBtn');
+
+    createBtn.addEventListener('click', () => {
+      editorSec.classList.add('active');
+      window.scrollTo(0, editorSec.offsetTop);
+    });
+
+    proceedBtn.addEventListener('click', () => {
+      editorSec.classList.remove('active');
+      backtestSec.classList.add('active');
+      window.scrollTo(0, backtestSec.offsetTop);
+    });
+
+    document.getElementById('saveAlgoBtn').addEventListener('click', () => {
+      backtestSec.classList.remove('active');
+      publishSec.classList.add('active');
+      window.scrollTo(0, publishSec.offsetTop);
+    });
+
+    document.getElementById('publishBtn').addEventListener('click', () => {
+      alert('Your strategy has been published!');
+    });
+  </script>
 </body>
 </html>
