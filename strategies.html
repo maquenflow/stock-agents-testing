@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Strategies</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     .section { margin: 2rem 0; text-align: left; }
@@ -13,14 +13,15 @@
     .code-examples { background: #272822; color: #f8f8f2; padding: 1rem; border-radius: 5px; font-family: monospace; overflow-x: auto; }
     .chart-container, canvas { width: 100%; height: 300px; margin: 1rem 0; }
     label, select, input, textarea, button { display: block; width: 100%; margin: 0.5rem 0; }
-    /* Modal */
+    /* Modal & Sidebar */
     .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); }
-    .modal-content { background:#fff; margin:5% auto; padding:20px; width:80%; max-width:600px; position:relative; border-radius:5px; }
-    .close { position:absolute; top:10px; right:15px; font-size:24px; cursor:pointer; }
-    ul#strategyList, ul#tickerSuggestions { max-height:150px; overflow-y:auto; list-style:none; padding:0; border:1px solid #ccc; border-radius:5px; }
-    ul#strategyList li, ul#tickerSuggestions li { padding:0.5rem; cursor:pointer; border-bottom:1px solid #eee; }
-    ul li:hover { background:#f0f0f0; }
-    #strategyDetail { margin-top:1rem; }
+    .modal-content { background:#fff; margin:5% auto; padding:0; width:80%; max-width:900px; position:relative; display:flex; border-radius:5px; overflow:hidden; }
+    .close { position:absolute; top:10px; right:15px; font-size:24px; cursor:pointer; color:#333; }
+    .sidebar { width:40%; border-right:1px solid #ddd; max-height:80vh; overflow-y:auto; }
+    .sidebar ul { list-style:none; padding:0; margin:0; }
+    .sidebar li { padding:0.75rem 1rem; border-bottom:1px solid #eee; cursor:pointer; }
+    .sidebar li:hover { background:#f0f0f0; }
+    .detail-panel { flex:1; padding:1rem; max-height:80vh; overflow-y:auto; }
   </style>
 </head>
 <body>
@@ -38,26 +39,30 @@
   <main>
     <!-- Search Strategies -->
     <section class="section">
-      <button id="searchStrategiesBtn">Buscar Estrategias</button>
+      <button id="searchStrategiesBtn">Search Strategies</button>
       <div id="searchModal" class="modal">
         <div class="modal-content">
           <span id="closeModal" class="close">&times;</span>
-          <h3>Buscar Estrategias</h3>
-          <input type="text" id="strategySearch" placeholder="Search by name..." />
-          <select id="filterType">
-            <option value="all">All Types</option>
-            <option value="Equity">Equity</option>
-            <option value="Crypto">Crypto</option>
-            <option value="Forex">Forex</option>
-          </select>
-          <select id="filterTech">
-            <option value="all">All Techniques</option>
-            <option value="SMA">SMA</option>
-            <option value="EMA">EMA</option>
-            <option value="RL">RL</option>
-          </select>
-          <ul id="strategyList"></ul>
-          <div id="strategyDetail"></div>
+          <div class="sidebar">
+            <h3 style="padding:1rem">Filter</h3>
+            <input type="text" id="strategySearch" placeholder="Search by name..." style="margin:0 1rem 1rem; width:calc(100% - 2rem);">
+            <select id="filterType" style="margin:0 1rem 1rem; width:calc(100% - 2rem);">
+              <option value="all">All Types</option>
+              <option value="Equity">Equity</option>
+              <option value="Crypto">Crypto</option>
+              <option value="Forex">Forex</option>
+            </select>
+            <select id="filterTech" style="margin:0 1rem 1rem; width:calc(100% - 2rem);">
+              <option value="all">All Techniques</option>
+              <option value="SMA">SMA</option>
+              <option value="EMA">EMA</option>
+              <option value="RL">RL</option>
+            </select>
+            <ul id="strategyList"></ul>
+          </div>
+          <div class="detail-panel" id="strategyDetail">
+            <p style="color:#777;">Select a strategy to view details</p>
+          </div>
         </div>
       </div>
     </section>
@@ -81,12 +86,12 @@ import yfinance as yf
 import pandas as pd
 
 data = yf.download("AAPL", period="2y")
- data['SMA20'] = data['Close'].rolling(window=20).mean()
- data['SMA50'] = data['Close'].rolling(window=50).mean()
- data['Signal'] = 0
- data.loc[data['SMA20'] > data['SMA50'], 'Signal'] = 1
- data.loc[data['SMA20'] < data['SMA50'], 'Signal'] = -1
- print(data.tail())
+data['SMA20'] = data['Close'].rolling(window=20).mean()
+data['SMA50'] = data['Close'].rolling(window=50).mean()
+data['Signal'] = 0
+data.loc[data['SMA20'] > data['SMA50'], 'Signal'] = 1
+data.loc[data['SMA20'] < data['SMA50'], 'Signal'] = -1
+print(data.tail())
       </pre>
       <button id="proceedBacktestBtn">Proceed to Backtesting</button>
     </section>
@@ -95,12 +100,12 @@ data = yf.download("AAPL", period="2y")
     <section id="backtestSection" class="backtest">
       <h3>Backtest Your Strategy</h3>
       <label for="tickerSearch">Search Ticker:</label>
-      <input type="text" id="tickerSearch" placeholder="e.g. Apple" />
+      <input type="text" id="tickerSearch" placeholder="e.g. Apple">
       <ul id="tickerSuggestions"></ul>
       <label for="startDate">Start Date (min 1 year ago):</label>
-      <input type="date" id="startDate" />
+      <input type="date" id="startDate">
       <label for="endDate">End Date:</label>
-      <input type="date" id="endDate" value="2025-05-05" />
+      <input type="date" id="endDate" value="2025-05-05">
       <button id="runBacktestBtn">Run Backtest</button>
       <canvas id="tickerChart"></canvas>
       <button id="saveAlgoBtn">Save Algorithm</button>
@@ -110,7 +115,7 @@ data = yf.download("AAPL", period="2y")
     <section id="publishSection" class="publish">
       <h3>Publish Your Strategy</h3>
       <label for="algoName">Name:</label>
-      <input type="text" id="algoName" placeholder="Strategy name" />
+      <input type="text" id="algoName" placeholder="Strategy name">
       <label for="algoDesc">Description:</label>
       <textarea id="algoDesc" rows="3" placeholder="Describe your strategy..."></textarea>
       <label for="algoType">Type:</label>
@@ -120,10 +125,10 @@ data = yf.download("AAPL", period="2y")
         <option value="forex">Forex</option>
       </select>
       <label for="algoTech">Technique:</label>
-      <input type="text" id="algoTech" placeholder="e.g. SMA, EMA, RL" />
+      <input type="text" id="algoTech" placeholder="e.g. SMA, EMA, RL">
       <label>Visibility:</label>
-      <input type="radio" name="visibility" value="public" id="visPublic" /><label for="visPublic">Public</label>
-      <input type="radio" name="visibility" value="private" id="visPrivate" /><label for="visPrivate">Private</label>
+      <input type="radio" name="visibility" value="public" id="visPublic"><label for="visPublic">Public</label>
+      <input type="radio" name="visibility" value="private" id="visPrivate"><label for="visPrivate">Private</label>
       <label for="pricingPlan">Pricing Plan:</label>
       <select id="pricingPlan">
         <option value="free">Free</option>
@@ -139,85 +144,103 @@ data = yf.download("AAPL", period="2y")
   </footer>
 
   <script>
-    // Strategy Search Modal
+    // Modal Search Strategies
+    const searchBtn = document.getElementById('searchStrategiesBtn');
     const modal = document.getElementById('searchModal');
-    const openBtn = document.getElementById('searchStrategiesBtn');
     const closeBtn = document.getElementById('closeModal');
     const strategyListEl = document.getElementById('strategyList');
     const detailEl = document.getElementById('strategyDetail');
     let strategies = [];
-    // Generate 50 dummy strategies
-    for(let i=1;i<=50;i++) strategies.push({
-      name: `Strategy ${i}`,
-      type: ['Equity','Crypto','Forex'][i%3],
-      technique: ['SMA','EMA','RL'][i%3],
-      description: `Detailed description for Strategy ${i}.`});
+    for(let i=1;i<=50;i++) {
+      strategies.push({
+        name: `Strategy ${i}`,
+        type: ['Equity','Crypto','Forex'][i%3],
+        technique: ['SMA','EMA','RL'][i%3],
+        avgReturn: `${(5 + i*0.1).toFixed(2)}%`,
+        volatility: `${(10 + i*0.2).toFixed(2)}%`,
+        maxDrawdown: `${(2 + i*0.05).toFixed(2)}%`,
+        description: `Detailed description for Strategy ${i} with backtest performance metrics, edge cases and recommended use.`
+      });
+    }
     function renderList() {
       const search = document.getElementById('strategySearch').value.toLowerCase();
       const type = document.getElementById('filterType').value;
       const tech = document.getElementById('filterTech').value;
-      strategyListEl.innerHTML='';
+      strategyListEl.innerHTML = '';
       strategies.filter(s=>
         s.name.toLowerCase().includes(search) &&
         (type==='all'||s.type===type) &&
         (tech==='all'||s.technique===tech)
       ).forEach(s=>{
-        const li=document.createElement('li'); li.textContent=`${s.name} (${s.type}/${s.technique})`;
-        li.onclick=()=>{ detailEl.innerHTML=`<h4>${s.name}</h4><p>Type: ${s.type}</p><p>Technique: ${s.technique}</p><p>${s.description}</p>`; };
+        const li = document.createElement('li'); li.textContent = `${s.name}`;
+        li.onclick = () => {
+          detailEl.innerHTML = `<h2>${s.name}</h2>
+            <p><strong>Type:</strong> ${s.type}</p>
+            <p><strong>Technique:</strong> ${s.technique}</p>
+            <p><strong>Average Return:</strong> ${s.avgReturn}</p>
+            <p><strong>Volatility:</strong> ${s.volatility}</p>
+            <p><strong>Max Drawdown:</strong> ${s.maxDrawdown}</p>
+            <p>${s.description}</p>`;
+        };
         strategyListEl.appendChild(li);
       });
     }
-    openBtn.onclick=()=>{ modal.style.display='block'; renderList(); };
-    closeBtn.onclick=()=> modal.style.display='none';
+    searchBtn.onclick = () => { modal.style.display = 'block'; renderList(); };
+    closeBtn.onclick = () => modal.style.display = 'none';
     ['strategySearch','filterType','filterTech'].forEach(id=>
       document.getElementById(id).addEventListener('input', renderList)
     );
 
-    // Wizard navigation from previous code
-    const createBtn = document.getElementById('createModelBtn');
-    const editorSec = document.getElementById('editorSection');
-    const backtestSec = document.getElementById('backtestSection');
-    const publishSec = document.getElementById('publishSection');
-    document.getElementById('proceedBacktestBtn').addEventListener('click',()=>{
-      editorSec.classList.remove('active'); backtestSec.classList.add('active');
+    // Model Editor trigger
+    document.getElementById('createModelBtn').addEventListener('click', () => {
+      document.getElementById('editorSection').classList.add('active');
+      document.getElementById('editorSection').scrollIntoView();
     });
-    document.getElementById('saveAlgoBtn').addEventListener('click',()=>{
-      backtestSec.classList.remove('active'); publishSec.classList.add('active');
-    });
-    document.getElementById('publishBtn').addEventListener('click',()=> alert('Your strategy has been published!'));
 
-    // Ticker search & chart
+    // Wizard Navigation
+    document.getElementById('proceedBacktestBtn').addEventListener('click', () => {
+      document.getElementById('editorSection').classList.remove('active');
+      document.getElementById('backtestSection').classList.add('active');
+    });
+    document.getElementById('saveAlgoBtn').addEventListener('click', () => {
+      document.getElementById('backtestSection').classList.remove('active');
+      document.getElementById('publishSection').classList.add('active');
+    });
+    document.getElementById('publishBtn').addEventListener('click', () => alert('Your strategy has been published!'));
+
+    // Ticker search & Chart.js
     const tickerInput = document.getElementById('tickerSearch');
     const suggestionsEl = document.getElementById('tickerSuggestions');
     let chart;
-    let timeout;
+    let debounce;
     tickerInput.addEventListener('input', ()=>{
-      clearTimeout(timeout);
-      timeout = setTimeout(async ()=>{
+      clearTimeout(debounce);
+      debounce = setTimeout(async ()=>{
         const q = tickerInput.value;
-        if(q.length<2) return;
+        if(q.length < 2) return;
         const res = await fetch(`https://query1.finance.yahoo.com/v1/finance/search?q=${q}`);
         const data = await res.json();
-        suggestionsEl.innerHTML='';
+        suggestionsEl.innerHTML = '';
         data.quotes.slice(0,5).forEach(item=>{
-          const li=document.createElement('li'); li.textContent=`${item.symbol} - ${item.shortname}`;
-          li.onclick=()=> loadChart(item.symbol);
+          const li = document.createElement('li'); li.textContent = `${item.symbol} - ${item.shortname}`;
+          li.onclick = () => loadChart(item.symbol);
           suggestionsEl.appendChild(li);
         });
-      },300);
+      }, 300);
     });
     async function loadChart(sym) {
       const end = new Date().toISOString().split('T')[0];
-      const startDate = new Date(); startDate.setFullYear(startDate.getFullYear()-1);
+      const startDate = new Date(); startDate.setFullYear(startDate.getFullYear() - 1);
       const start = startDate.toISOString().split('T')[0];
       const url = `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?range=1y&interval=1d`;
-      const res = await fetch(url); const json = await res.json();
-      const res0 = json.chart.result[0];
-      const timestamps = res0.timestamp.map(t=>new Date(t*1000).toLocaleDateString());
-      const prices = res0.indicators.quote[0].close;
+      const res = await fetch(url);
+      const json = await res.json();
+      const r = json.chart.result[0];
+      const labels = r.timestamp.map(t => new Date(t*1000).toLocaleDateString());
+      const dataSet = r.indicators.quote[0].close;
       if(chart) chart.destroy();
       const ctx = document.getElementById('tickerChart').getContext('2d');
-      chart = new Chart(ctx, { type:'line', data:{ labels:timestamps, datasets:[{ label:sym, data:prices, fill:false }] }, options:{ responsive:true } });
+      chart = new Chart(ctx, { type:'line', data:{ labels, datasets:[{ label: sym, data: dataSet, fill: false }]}, options:{ responsive:true }});
     }
   </script>
 </body>
